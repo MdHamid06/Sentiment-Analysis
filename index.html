@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4cc9f0;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #4bb543;
+            --danger-color: #ff3333;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 4rem 0;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .platform-card {
+            transition: all 0.3s ease;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        
+        .platform-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .platform-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .analysis-container {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            display: none;
+        }
+        
+        .sentiment-meter {
+            height: 20px;
+            border-radius: 10px;
+            background: linear-gradient(to right, var(--danger-color), #ffcc00, var(--success-color));
+            position: relative;
+            margin: 1rem 0;
+        }
+        
+        .sentiment-indicator {
+            position: absolute;
+            top: -10px;
+            width: 20px;
+            height: 40px;
+            background-color: var(--dark-color);
+            border-radius: 5px;
+            transform: translateX(-10px);
+        }
+        
+        .review-card {
+            border-left: 4px solid var(--primary-color);
+            transition: all 0.3s ease;
+        }
+        
+        .positive {
+            border-left-color: var(--success-color);
+        }
+        
+        .negative {
+            border-left-color: var(--danger-color);
+        }
+        
+        .loader {
+            display: none;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .result-card {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-chart-line me-2"></i>Sentiment Analyzer
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-4">Understand Public Sentiment</h1>
+            <p class="lead mb-5">Analyze reviews and comments from various platforms to gauge public opinion</p>
+        </div>
+    </section>
+
+    <!-- Platform Selection -->
+    <section class="container my-5">
+        <div class="row">
+            <div class="col-12 text-center mb-5">
+                <h2>Select a Platform to Analyze</h2>
+                <p class="text-muted">Choose where you want to analyze sentiment from</p>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="card platform-card text-center p-4" onclick="selectPlatform('youtube')">
+                    <div class="platform-icon text-danger">
+                        <i class="fab fa-youtube"></i>
+                    </div>
+                    <h4>YouTube</h4>
+                    <p class="text-muted">Video comments analysis</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="card platform-card text-center p-4" onclick="selectPlatform('imdb')">
+                    <div class="platform-icon text-warning">
+                        <i class="fab fa-imdb"></i>
+                    </div>
+                    <h4>IMDb</h4>
+                    <p class="text-muted">Movie reviews analysis</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="card platform-card text-center p-4" onclick="selectPlatform('amazon')">
+                    <div class="platform-icon text-primary">
+                        <i class="fab fa-amazon"></i>
+                    </div>
+                    <h4>Amazon</h4>
+                    <p class="text-muted">Product reviews analysis</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="card platform-card text-center p-4" onclick="selectPlatform('flipkart')">
+                    <div class="platform-icon text-info">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <h4>Flipkart</h4>
+                    <p class="text-muted">Product reviews analysis</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analysis Section -->
+    <section class="container">
+        <div class="analysis-container" id="analysisContainer">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 id="platformTitle">YouTube Analysis</h3>
+                    <p class="text-muted" id="platformDescription">Enter a YouTube video URL to analyze comments</p>
+                    
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="analysisInput" placeholder="Enter URL or name">
+                        <button class="btn btn-primary" type="button" onclick="analyze()">
+                            <i class="fas fa-chart-pie me-2"></i>Analyze
+                        </button>
+                    </div>
+                    
+                    <div class="loader" id="loader"></div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card result-card p-3" id="resultCard">
+                        <h4>Analysis Result</h4>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Negative</span>
+                            <span>Positive</span>
+                        </div>
+                        <div class="sentiment-meter">
+                            <div class="sentiment-indicator" id="sentimentIndicator"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <div class="text-center">
+                                <h5 id="positivePercent">75%</h5>
+                                <p class="text-muted small">Positive</p>
+                            </div>
+                            <div class="text-center">
+                                <h5 id="totalReviews">24</h5>
+                                <p class="text-muted small">Total Reviews</p>
+                            </div>
+                            <div class="text-center">
+                                <h5 id="negativePercent">25%</h5>
+                                <p class="text-muted small">Negative</p>
+                            </div>
+                        </div>
+                        
+                        <div class="alert mt-3" id="overallSentimentAlert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <span id="overallSentimentText">Overall sentiment is Positive</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4" id="sampleReviewsContainer">
+                <div class="col-12">
+                    <h5>Sample Reviews</h5>
+                    <div id="sampleReviews"></div>
+                </div>  
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2025 Group M. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPlatform = '';
+        
+        function selectPlatform(platform) {
+            currentPlatform = platform;
+            document.getElementById('analysisContainer').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('sampleReviewsContainer').style.display = 'none';
+            
+            // Reset input
+            document.getElementById('analysisInput').value = '';
+            
+            // Update UI based on platform
+            switch(platform) {
+                case 'youtube':
+                    document.getElementById('platformTitle').textContent = 'YouTube Analysis';
+                    document.getElementById('platformDescription').textContent = 'Enter a YouTube video URL to analyze comments';
+                    document.getElementById('analysisInput').placeholder = 'https://www.youtube.com/watch?v=...';
+                    break;
+                case 'imdb':
+                    document.getElementById('platformTitle').textContent = 'IMDb Analysis';
+                    document.getElementById('platformDescription').textContent = 'Enter a movie name to analyze reviews';
+                    document.getElementById('analysisInput').placeholder = 'Movie name...';
+                    break;
+                case 'amazon':
+                    document.getElementById('platformTitle').textContent = 'Amazon Analysis';
+                    document.getElementById('platformDescription').textContent = 'Enter an Amazon product URL or ASIN';
+                    document.getElementById('analysisInput').placeholder = 'Product URL or ASIN...';
+                    break;
+                case 'flipkart':
+                    document.getElementById('platformTitle').textContent = 'Flipkart Analysis';
+                    document.getElementById('platformDescription').textContent = 'Enter a Flipkart product URL or ID';
+                    document.getElementById('analysisInput').placeholder = 'Product URL or ID...';
+                    break;
+            }
+            
+            // Scroll to analysis section
+            document.getElementById('analysisContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        async function analyze() {
+            const input = document.getElementById('analysisInput').value.trim();
+            if (!input) {
+                alert('Please enter a valid input!');
+                return;
+            }
+
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('resultCard').style.display = 'none';
+            document.getElementById('sampleReviewsContainer').style.display = 'none';
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ platform: currentPlatform, input: input })
+
+                });
+
+                const result = await response.json();
+                displayResults(result);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during analysis. Please try again.');
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+        
+        function displayResults(result) {
+            // Update meter
+            const positivePercent = result.positive_percentage || 0;
+            document.getElementById('sentimentIndicator').style.left = `${positivePercent}%`;
+            
+            // Update percentages
+            document.getElementById('positivePercent').textContent = `${positivePercent}%`;
+            document.getElementById('negativePercent').textContent = `${100 - positivePercent}%`;
+            document.getElementById('totalReviews').textContent = result.total_reviews || result.total_comments || 0;
+            
+            // Update overall sentiment
+            const sentimentAlert = document.getElementById('overallSentimentAlert');
+            const sentimentText = document.getElementById('overallSentimentText');
+            
+            if (result.overall_sentiment === 'Positive') {
+                sentimentAlert.className = 'alert alert-success mt-3';
+                sentimentText.textContent = 'Overall sentiment is Positive';
+            } else {
+                sentimentAlert.className = 'alert alert-danger mt-3';
+                sentimentText.textContent = 'Overall sentiment is Negative';
+            }
+            
+            // Display sample reviews with sentiment labels
+            const sampleReviewsContainer = document.getElementById('sampleReviews');
+            sampleReviewsContainer.innerHTML = '';
+            
+            const reviews = result.sample_reviews || result.sample_comments || [];
+            reviews.forEach(item => {
+                const reviewElement = document.createElement('div');
+                reviewElement.className = 'card review-card mb-3 p-3';
+                
+                if (item.sentiment === 'Positive') {
+                    reviewElement.classList.add('positive');
+                } else {
+                    reviewElement.classList.add('negative');
+                }
+                
+                reviewElement.innerHTML = `
+                    <p>${item.text}</p>
+                    <small class="text-muted">${item.sentiment} sentiment</small>
+                `;
+                
+                sampleReviewsContainer.appendChild(reviewElement);
+            });
+            
+            // Show results
+            document.getElementById('resultCard').style.display = 'block';
+            document.getElementById('sampleReviewsContainer').style.display = 'block';  
+        }
+        
+        // Mock data for demo purposes
+        function getMockResult(platform) {
+            const mockData = {
+                youtube: {
+                    total_comments: 42,
+                    positive_percentage: 78,
+                    overall_sentiment: "Positive",
+                    sample_comments: [
+                        "This video is amazing! Learned so much.",
+                        "Great content, very informative.",
+                        "Not what I expected, but still good.",
+                        "The best tutorial on this topic!",
+                        "Could be better with more examples."
+                    ]
+                },
+                imdb: {
+                    total_reviews: 35,
+                    positive_percentage: 65,
+                    overall_sentiment: "Positive",
+                    sample_reviews: [
+                        "One of the best movies I've seen this year!",
+                        "Great acting and storyline.",
+                        "The plot was predictable but entertaining.",
+                        "Not as good as the first one.",
+                        "Waste of time and money."
+                    ]
+                },
+                amazon: {
+                    total_reviews: 28,
+                    positive_percentage: 82,
+                    overall_sentiment: "Positive",
+                    sample_reviews: [
+                        "Works perfectly, exactly as described!",
+                        "Great product for the price.",
+                        "Arrived quickly and in good condition.",
+                        "Stopped working after 2 weeks.",
+                        "Better than I expected!"
+                    ]
+                },
+                flipkart: {
+                    total_reviews: 19,
+                    positive_percentage: 47,
+                    overall_sentiment: "Negative",
+                    sample_reviews: [
+                        "Product was damaged on arrival.",
+                        "Good quality but delivery was late.",
+                        "Not worth the price.",
+                        "Works fine for basic needs.",
+                        "Complete waste of money."
+                    ]
+                }
+            };
+            
+            return mockData[platform] || mockData.youtube;
+        }
+     </script>
+</body>
+</html>
